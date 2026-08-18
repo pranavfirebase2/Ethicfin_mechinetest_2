@@ -23,6 +23,7 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
   late TextEditingController _descController;
   DateTime _dueDate = DateTime.now().add(const Duration(days: 1));
   String _priority = 'Medium';
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -151,8 +152,30 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () async {
+                  onPressed: _isLoading ? null : () async {
                     if (_formKey.currentState!.validate()) {
+                      if (isEditing) {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Update Task'),
+                            content: const Text('Are you sure you want to save these changes?'),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, true), 
+                                child: const Text('Update', style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ),
+                        );
+                        
+                        if (confirm != true) return;
+                      }
+
+                      setState(() {
+                        _isLoading = true;
+                      });
                       try {
                         final task = Task(
                           id: isEditing ? widget.taskToEdit!.id : const Uuid().v4(),
@@ -175,10 +198,22 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
                         if (context.mounted) Navigator.pop(context);
                       } catch (e) {
                         if (context.mounted) SnackBarUtils.showError(context, 'Failed to save task. Please try again.');
+                      } finally {
+                        if (context.mounted) {
+                          setState(() {
+                            _isLoading = false;
+                          });
+                        }
                       }
                     }
                   },
-                  child: Text(isEditing ? 'Update Task' : 'Save Task'),
+                  child: _isLoading 
+                      ? const SizedBox(
+                          height: 20, 
+                          width: 20, 
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                        )
+                      : Text(isEditing ? 'Update Task' : 'Save Task'),
                 ),
               ),
             ],

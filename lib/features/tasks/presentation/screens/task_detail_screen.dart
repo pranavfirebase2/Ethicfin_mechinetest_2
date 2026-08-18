@@ -8,15 +8,24 @@ import '../../domain/models/task_model.dart';
 import '../providers/task_provider.dart';
 import 'add_task_screen.dart';
 
-class TaskDetailScreen extends ConsumerWidget {
+class TaskDetailScreen extends ConsumerStatefulWidget {
   final Task task;
 
   const TaskDetailScreen({super.key, required this.task});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final tasks = ref.watch(taskProvider);
-    final currentTask = tasks.firstWhere((t) => t.id == task.id, orElse: () => task);
+  ConsumerState<TaskDetailScreen> createState() => _TaskDetailScreenState();
+}
+
+class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
+  bool _isDeleting = false;
+  bool _isToggling = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final asyncState = ref.watch(taskProvider);
+    final tasks = asyncState.value ?? [];
+    final currentTask = tasks.firstWhere((t) => t.id == widget.task.id, orElse: () => widget.task);
 
     return CommonBackground(
       title: 'Task Details',
@@ -31,14 +40,35 @@ class TaskDetailScreen extends ConsumerWidget {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline, color: AppTheme.priorityHigh),
-            onPressed: () async {
+            icon: _isDeleting 
+                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.priorityHigh))
+                : const Icon(Icons.delete_outline, color: AppTheme.priorityHigh),
+            onPressed: _isDeleting ? null : () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Delete Task'),
+                  content: const Text('Are you sure you want to delete this task? This action cannot be undone.'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, true), 
+                      child: const Text('Delete', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirm != true) return;
+
+              setState(() { _isDeleting = true; });
               try {
                 await ref.read(taskProvider.notifier).deleteTask(currentTask.id);
                 if (context.mounted) SnackBarUtils.showSuccess(context, 'Task deleted successfully!');
                 if (context.mounted) Navigator.pop(context);
               } catch (e) {
                 if (context.mounted) SnackBarUtils.showError(context, 'Failed to delete task.');
+                setState(() { _isDeleting = false; });
               }
             },
           ),
@@ -58,12 +88,15 @@ class TaskDetailScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 24),
                   GestureDetector(
-                    onTap: () async {
+                    onTap: _isToggling ? null : () async {
+                      setState(() { _isToggling = true; });
                       try {
                         await ref.read(taskProvider.notifier).toggleTaskCompletion(currentTask);
                         if (context.mounted) SnackBarUtils.showSuccess(context, currentTask.isCompleted ? 'Task marked as pending' : 'Task marked as completed!');
                       } catch (e) {
                         if (context.mounted) SnackBarUtils.showError(context, 'Failed to update status.');
+                      } finally {
+                        if (mounted) setState(() { _isToggling = false; });
                       }
                     },
                     child: Container(
@@ -121,12 +154,15 @@ class TaskDetailScreen extends ConsumerWidget {
                           Switch(
                             value: currentTask.isCompleted,
                             activeColor: Colors.green,
-                            onChanged: (val) async {
+                            onChanged: _isToggling ? null : (val) async {
+                              setState(() { _isToggling = true; });
                               try {
                                 await ref.read(taskProvider.notifier).toggleTaskCompletion(currentTask);
                                 if (context.mounted) SnackBarUtils.showSuccess(context, currentTask.isCompleted ? 'Task marked as pending' : 'Task marked as completed!');
                               } catch (e) {
                                 if (context.mounted) SnackBarUtils.showError(context, 'Failed to update status.');
+                              } finally {
+                                if (mounted) setState(() { _isToggling = false; });
                               }
                             },
                           ),
