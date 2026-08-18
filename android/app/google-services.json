@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "717376638619",
+    "project_id": "ethicfin-todo",
+    "storage_bucket": "ethicfin-todo.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:717376638619:android:bed1f25b4032fb0312403e",
+        "android_client_info": {
+          "package_name": "com.example.ethicfin_mechinetest_2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2OiZuinMGx6OzKpr2i4TyArelip8kVys"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
