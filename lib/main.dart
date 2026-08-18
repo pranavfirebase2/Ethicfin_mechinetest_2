@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'core/theme/app_theme.dart';
 import 'features/tasks/presentation/screens/task_list_screen.dart';
+import 'features/splash/presentation/screens/splash_screen.dart';
 import 'features/tasks/data/services/local_task_service.dart';
 import 'firebase_options.dart';
 
@@ -30,10 +31,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'EthicFin Task Manager',
+      title: 'TODO',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const TaskListScreen(),
+      home: const SplashScreen(),
     );
   }
 }
