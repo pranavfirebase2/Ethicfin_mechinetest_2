@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../core/widgets/common_background.dart';
 import '../../domain/models/task_model.dart';
 import '../providers/task_provider.dart';
@@ -31,9 +32,14 @@ class TaskDetailScreen extends ConsumerWidget {
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline, color: AppTheme.priorityHigh),
-            onPressed: () {
-              ref.read(taskProvider.notifier).deleteTask(currentTask.id);
-              Navigator.pop(context);
+            onPressed: () async {
+              try {
+                await ref.read(taskProvider.notifier).deleteTask(currentTask.id);
+                if (context.mounted) SnackBarUtils.showSuccess(context, 'Task deleted successfully!');
+                if (context.mounted) Navigator.pop(context);
+              } catch (e) {
+                if (context.mounted) SnackBarUtils.showError(context, 'Failed to delete task.');
+              }
             },
           ),
         ],
@@ -52,8 +58,13 @@ class TaskDetailScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 24),
                   GestureDetector(
-                    onTap: () {
-                      ref.read(taskProvider.notifier).toggleTaskCompletion(currentTask);
+                    onTap: () async {
+                      try {
+                        await ref.read(taskProvider.notifier).toggleTaskCompletion(currentTask);
+                        if (context.mounted) SnackBarUtils.showSuccess(context, currentTask.isCompleted ? 'Task marked as pending' : 'Task marked as completed!');
+                      } catch (e) {
+                        if (context.mounted) SnackBarUtils.showError(context, 'Failed to update status.');
+                      }
                     },
                     child: Container(
                       padding: const EdgeInsets.all(16),
@@ -110,8 +121,13 @@ class TaskDetailScreen extends ConsumerWidget {
                           Switch(
                             value: currentTask.isCompleted,
                             activeColor: Colors.green,
-                            onChanged: (val) {
-                              ref.read(taskProvider.notifier).toggleTaskCompletion(currentTask);
+                            onChanged: (val) async {
+                              try {
+                                await ref.read(taskProvider.notifier).toggleTaskCompletion(currentTask);
+                                if (context.mounted) SnackBarUtils.showSuccess(context, currentTask.isCompleted ? 'Task marked as pending' : 'Task marked as completed!');
+                              } catch (e) {
+                                if (context.mounted) SnackBarUtils.showError(context, 'Failed to update status.');
+                              }
                             },
                           ),
                         ],

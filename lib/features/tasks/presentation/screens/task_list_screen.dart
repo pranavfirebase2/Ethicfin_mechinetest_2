@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../domain/models/task_model.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../core/widgets/common_background.dart';
 import '../providers/task_provider.dart';
 import 'add_task_screen.dart';
@@ -160,8 +161,13 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   InkWell(
-                    onTap: () {
-                      ref.read(taskProvider.notifier).toggleTaskCompletion(task);
+                    onTap: () async {
+                      try {
+                        await ref.read(taskProvider.notifier).toggleTaskCompletion(task);
+                        if (context.mounted) SnackBarUtils.showSuccess(context, task.isCompleted ? 'Task marked as pending' : 'Task marked as completed!');
+                      } catch (e) {
+                        if (context.mounted) SnackBarUtils.showError(context, 'Failed to update status.');
+                      }
                     },
                     child: Container(
                       width: 24,

@@ -25,11 +25,15 @@ class TaskNotifier extends Notifier<List<Task>> {
     _repository.onDataChanged = () {
       _loadTasks();
     };
-    return _repository.getLocalTasks();
+    final initialTasks = _repository.getLocalTasks();
+    initialTasks.sort((a, b) => b.createdDate.compareTo(a.createdDate));
+    return initialTasks;
   }
 
   void _loadTasks() {
-    state = _repository.getLocalTasks();
+    final tasks = _repository.getLocalTasks();
+    tasks.sort((a, b) => b.createdDate.compareTo(a.createdDate));
+    state = tasks;
   }
 
   Future<void> addTask(Task task) async {

@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../core/widgets/common_background.dart';
 import '../../domain/models/task_model.dart';
 import '../providers/task_provider.dart';
@@ -91,7 +92,7 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
               _buildLabel('Description'),
               TextFormField(
                 controller: _descController,
-                maxLines: 4,
+                maxLines: 8,
                 decoration: _inputDecoration('Enter task description'),
                 validator: (value) => value == null || value.isEmpty ? 'Description is required' : null,
               ),
@@ -150,25 +151,31 @@ class _AddTaskScreenState extends ConsumerState<AddTaskScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-                      final task = Task(
-                        id: isEditing ? widget.taskToEdit!.id : const Uuid().v4(),
-                        title: _titleController.text,
-                        description: _descController.text,
-                        priority: _priority,
-                        dueDate: _dueDate,
-                        createdDate: isEditing ? widget.taskToEdit!.createdDate : DateTime.now(),
-                        isCompleted: isEditing ? widget.taskToEdit!.isCompleted : false,
-                      );
-                      
-                      if (isEditing) {
-                        ref.read(taskProvider.notifier).updateTask(task);
-                      } else {
-                        ref.read(taskProvider.notifier).addTask(task);
+                      try {
+                        final task = Task(
+                          id: isEditing ? widget.taskToEdit!.id : const Uuid().v4(),
+                          title: _titleController.text,
+                          description: _descController.text,
+                          priority: _priority,
+                          dueDate: _dueDate,
+                          createdDate: isEditing ? widget.taskToEdit!.createdDate : DateTime.now(),
+                          isCompleted: isEditing ? widget.taskToEdit!.isCompleted : false,
+                        );
+                        
+                        if (isEditing) {
+                          await ref.read(taskProvider.notifier).updateTask(task);
+                          if (context.mounted) SnackBarUtils.showSuccess(context, 'Task updated successfully!');
+                        } else {
+                          await ref.read(taskProvider.notifier).addTask(task);
+                          if (context.mounted) SnackBarUtils.showSuccess(context, 'New task added!');
+                        }
+                        
+                        if (context.mounted) Navigator.pop(context);
+                      } catch (e) {
+                        if (context.mounted) SnackBarUtils.showError(context, 'Failed to save task. Please try again.');
                       }
-                      
-                      Navigator.pop(context);
                     }
                   },
                   child: Text(isEditing ? 'Update Task' : 'Save Task'),
