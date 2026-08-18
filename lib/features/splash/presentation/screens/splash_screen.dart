@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/common_background.dart';
 import '../../../../features/tasks/presentation/screens/task_list_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -23,9 +25,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Center(
+    return CommonBackground(
+      child: Center(
         child: Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -39,8 +40,8 @@ class _SplashScreenState extends State<SplashScreen> {
                   fontFamily: 'sans-serif',
                 ),
                 children: [
-                  TextSpan(text: 'TO', style: TextStyle(color: Colors.white)),
-                  TextSpan(text: 'D', style: TextStyle(color: Color(0xFFF95B56))),
+                  TextSpan(text: 'TO', style: TextStyle(color: Colors.black87)),
+                  TextSpan(text: 'D', style: TextStyle(color: AppTheme.secondaryColor)),
                 ],
               ),
             ),
@@ -49,13 +50,13 @@ class _SplashScreenState extends State<SplashScreen> {
               width: 44,
               height: 44,
               decoration: const BoxDecoration(
-                color: Color(0xFFF95B56),
+                color: AppTheme.secondaryColor,
                 shape: BoxShape.circle,
               ),
               child: const Center(
                 child: Icon(
                   Icons.check, 
-                  color: Colors.black, 
+                  color: Colors.white, 
                   size: 32, 
                   weight: 900,
                 ),

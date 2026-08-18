@@ -20,6 +20,7 @@ class TaskListScreen extends ConsumerStatefulWidget {
 class _TaskListScreenState extends ConsumerState<TaskListScreen> {
   String searchQuery = '';
   String filter = 'All';
+  String sortBy = 'Latest';
 
   @override
   Widget build(BuildContext context) {
@@ -61,6 +62,27 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                     shape: BoxShape.circle,
                   ),
                   child: PopupMenuButton<String>(
+                    icon: const Icon(Icons.sort, color: AppTheme.primaryColor),
+                    tooltip: 'Sort Tasks',
+                    onSelected: (val) {
+                      setState(() {
+                        sortBy = val;
+                      });
+                    },
+                    itemBuilder: (context) => [
+                      'Latest',
+                      'Due Date',
+                      'Priority'
+                    ].map((e) => PopupMenuItem(value: e, child: Text('Sort by $e'))).toList(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: PopupMenuButton<String>(
                     icon: const Icon(Icons.filter_list, color: AppTheme.primaryColor),
                     tooltip: 'Filter Tasks',
                     onSelected: (val) {
@@ -79,18 +101,29 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
               ],
             ),
           ),
-          if (filter != 'All')
+          if (filter != 'All' || sortBy != 'Latest')
             Padding(
-              padding: const EdgeInsets.only(bottom: 12, left: 24),
+              padding: const EdgeInsets.only(bottom: 12, left: 24, right: 24),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Chip(
-                  label: Text('Filter: $filter', style: const TextStyle(fontSize: 12)),
-                  onDeleted: () {
-                    setState(() {
-                      filter = 'All';
-                    });
-                  },
+                child: Wrap(
+                  spacing: 8,
+                  children: [
+                    if (filter != 'All')
+                      Chip(
+                        label: Text('Filter: $filter', style: const TextStyle(fontSize: 12)),
+                        onDeleted: () {
+                          setState(() { filter = 'All'; });
+                        },
+                      ),
+                    if (sortBy != 'Latest')
+                      Chip(
+                        label: Text('Sort: $sortBy', style: const TextStyle(fontSize: 12)),
+                        onDeleted: () {
+                          setState(() { sortBy = 'Latest'; });
+                        },
+                      ),
+                  ],
                 ),
               ),
             ),
@@ -99,7 +132,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
               loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor)),
               error: (err, stack) => Center(child: Text('Error loading tasks: $err')),
               data: (allTasks) {
-                var filteredTasks = allTasks;
+                var filteredTasks = allTasks.toList();
                 if (searchQuery.isNotEmpty) {
                   filteredTasks = filteredTasks.where((t) => 
                     t.title.toLowerCase().contains(searchQuery.toLowerCase()) || 
@@ -113,6 +146,23 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                   filteredTasks = filteredTasks.where((t) => !t.isCompleted).toList();
                 } else if (filter == 'High Priority') {
                   filteredTasks = filteredTasks.where((t) => t.priority.toLowerCase() == 'high').toList();
+                }
+
+                if (sortBy == 'Due Date') {
+                  filteredTasks.sort((a, b) => a.dueDate.compareTo(b.dueDate));
+                } else if (sortBy == 'Priority') {
+                  int getPriorityWeight(String p) {
+                    if (p.toLowerCase() == 'high') return 3;
+                    if (p.toLowerCase() == 'medium') return 2;
+                    return 1;
+                  }
+                  filteredTasks.sort((a, b) {
+                    final weightA = getPriorityWeight(a.priority);
+                    final weightB = getPriorityWeight(b.priority);
+                    return weightB.compareTo(weightA);
+                  });
+                } else {
+                  filteredTasks.sort((a, b) => b.createdDate.compareTo(a.createdDate));
                 }
 
                 if (filteredTasks.isEmpty) return _buildEmptyState();
